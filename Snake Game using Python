@@ -1,0 +1,107 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Set up display
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("Snake Game")
+
+# Colors
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# Clock for controlling the game's speed
+clock = pygame.time.Clock()
+
+# Snake class
+class Snake:
+    def __init__(self):
+        self.body = [(200, 200)]
+        self.direction = (1, 0)
+
+    def move(self):
+        head = self.body[-1]
+        new_head = (head[0] + self.direction[0]*20, head[1] + self.direction[1]*20)
+        self.body.append(new_head)
+        self.body.pop(0)
+
+    def grow(self):
+        tail = self.body[0]
+        new_tail = (tail[0] - self.direction[0]*20, tail[1] - self.direction[1]*20)
+        self.body.insert(0, new_tail)
+
+    def check_collision(self):
+        return len(self.body) != len(set(self.body))
+
+    def draw(self):
+        for segment in self.body:
+            pygame.draw.rect(screen, GREEN, (segment[0], segment[1], 20, 20))
+
+# Food class
+class Food:
+    def __init__(self):
+        self.position = (random.randrange(40) * 20, random.randrange(30) * 20)
+
+    def spawn_food(self):
+        self.position = (random.randrange(40) * 20, random.randrange(30) * 20)
+
+    def draw(self):
+        pygame.draw.rect(screen, RED, (*self.position, 20, 20))
+
+# Initialize snake and food
+snake = Snake()
+food = Food()
+
+# Main game loop
+game_over = False
+while not game_over:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_over = True
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and snake.direction != (0, 1):
+                snake.direction = (0, -1)
+            if event.key == pygame.K_DOWN and snake.direction != (0, -1):
+                snake.direction = (0, 1)
+            if event.key == pygame.K_LEFT and snake.direction != (1, 0):
+                snake.direction = (-1, 0)
+            if event.key == pygame.K_RIGHT and snake.direction != (-1, 0):
+                snake.direction = (1, 0)
+
+    # Move snake
+    snake.move()
+
+    # Check collision with food
+    if snake.body[-1] == food.position:
+        food.spawn_food()
+        snake.grow()
+
+    # Check collision with walls or itself
+    if (
+        snake.body[-1][0] >= 800
+        or snake.body[-1][0] < 0
+        or snake.body[-1][1] >= 600
+        or snake.body[-1][1] < 0
+        or snake.check_collision()
+    ):
+        game_over = True
+
+    # Clear screen
+    screen.fill(WHITE)
+
+    # Draw snake and food
+    snake.draw()
+    food.draw()
+
+    # Update display
+    pygame.display.flip()
+
+    # Control game speed
+    clock.tick(10)
+
+# Quit pygame
+pygame.quit()
